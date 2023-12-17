@@ -12,9 +12,9 @@ if not os.path.exists(logdir):
 if not os.path.exists(tokenfile):
     inp = input("Wprowadź token API dla ipinfo.io: ")
     with open(tokenfile, "w") as f:
-        content = """########################################
-#Place your token for ipinfo.io queries#
-########################################
+        content = """################################################
+#Tutaj zamieść token dla zapytań API ipinfo.io #
+################################################
 
 token={}""".format(inp)
         f.write(content)
@@ -35,9 +35,10 @@ failure = [False]
 for file in os.listdir(logdir):
     logfiles.append(os.path.join(logdir, file))
 
-query = input("Wprowadź login użytkownika: ")
-
 if len(logfiles) != 0:
+
+    query = input("Wprowadź login użytkownika: ")
+
     for file in logfiles:
         with open(file, "r") as log:
             raw = log.read().split("\n")
@@ -60,7 +61,7 @@ if len(logfiles) != 0:
             data[ip] = timestamp.replace("[", "").replace("]", "").split(" ")[0].replace(":", " ", 1)
 
     print("\nDANE POŁĄCZEŃ UŻYTKOWNIKA: [{}]".format(query))
-    print("Rekordów IP: {}".format(len(list(data))))
+    print("Łączna liczba rekordów IP: {}".format(len(list(data))))
 
     test_req = requests.get(f"https://ipinfo.io/8.8.8.8?token={token}").text[1:-1].strip().split("\n")
     for item in test_req:
