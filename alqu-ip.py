@@ -60,37 +60,50 @@ if len(logfiles) != 0:
         elif ip in list(data) and timestamp > data[ip][0]:
             data[ip] = timestamp.replace("[", "").replace("]", "").split(" ")[0].replace(":", " ", 1)
 
-    print("\nDANE POŁĄCZEŃ UŻYTKOWNIKA: [{}]".format(query))
-    print("Łączna liczba rekordów IP: {}".format(len(list(data))))
+    with open(f"{query}.log", "w", encoding="utf-8") as export:
 
-    test_req = requests.get(f"https://ipinfo.io/8.8.8.8?token={token}").text[1:-1].strip().split("\n")
-    for item in test_req:
-        if "error" in item:
-            failure[0] = True
-        if failure[0] and "title" in item:
-            failure.append(item.replace('"', '').strip().split(" ", 1)[1].strip(","))
+        basic = "\nDANE POŁĄCZEŃ UŻYTKOWNIKA: [{}]".format(query)
+        print(basic)
+        export.write(basic)
+        rnum = "Łączna liczba rekordów IP: {}".format(len(list(data)))
+        print(rnum)
+        export.write(rnum)
 
-    if not failure[0]:
+        test_req = requests.get(f"https://ipinfo.io/8.8.8.8?token={token}").text[1:-1].strip().split("\n")
+        for item in test_req:
+            if "error" in item:
+                failure[0] = True
+            if failure[0] and "title" in item:
+                failure.append(item.replace('"', '').strip().split(" ", 1)[1].strip(","))
 
-        for ip_addr, tstamp in data.items():
+        if not failure[0]:
 
-            raw = requests.get(f"https://ipinfo.io/{ip_addr}?token={token}").text[1:-1].strip().split("\n")
-            track = {}
+            for ip_addr, tstamp in data.items():
 
-            for item in raw:
-                key = item.split(":")[0].replace('"', "").strip()
-                value = item.split(":")[1].replace('"', "").strip().rstrip(",")
-                track[key] = value
+                raw = requests.get(f"https://ipinfo.io/{ip_addr}?token={token}").text[1:-1].strip().split("\n")
+                track = {}
 
-            if "error" in list(track):
-                print("Błąd: {}".format(track["error"]))
-            else:
-                print("{0}IP:  {1}{0}".format(sep, ip_addr)),
-                print(f"Ostatnie zapytanie: {tstamp}"),
-                print(f"ISP: {track['org'] if 'org' in list(track) else 'brak danych'}")
-                print(f"Lokalizacja (w przybliżeniu): {track['region']if 'region' in list(track) else ''}, {track['city']if 'city' in list(track) else 'brak danych'}")
-                print(f"Współrzędne geograficzne: {track['loc']if 'loc' in list(track) else 'brak danych'}")
-    else:
-        print("Błąd połączenia z API: {}".format(failure[1]))
+                for item in raw:
+                    key = item.split(":")[0].replace('"', "").strip()
+                    value = item.split(":")[1].replace('"', "").strip().rstrip(",")
+                    track[key] = value
+
+                if "error" in list(track):
+                    err = "Błąd: {}".format(track["error"])
+                    print(err)
+                    export.write(err)
+                else:
+                    main = f"""{sep}IP:  {ip_addr}{sep}
+Ostatnie zapytanie: {tstamp}
+ISP: {track['org'] if 'org' in list(track) else 'brak danych'}
+Lokalizacja (w przybliżeniu): {track['region']if 'region' in list(track) else ''}, {track['city']if 'city' in list(track) else 'brak danych'}
+Współrzędne geograficzne: {track['loc']if 'loc' in list(track) else 'brak danych'}"""
+
+                    print(main)
+                    export.write(main)
+        else:
+            con_err = "Błąd połączenia z API: {}".format(failure[1])
+            print(con_err)
+            export.write(con_err)
 else:
     print("Błąd: brak logów do odczytu. Umieść logi w folderze ./logs")
